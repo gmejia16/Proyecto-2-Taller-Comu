@@ -2,7 +2,7 @@
 
 ## Sesión 1: 25 de mayo
 En la primer sesión se realizó una lectura detallada del proyecto, con la intención de comprender los requerimientos y entregables deseados. También se definió que se va a trabajar con ```Python```.
-Se define que cada persona va a investigar de forma independiente cómo funciona la modulación SSB. Se acuerda reunirnos el jueves 28 de mayo a las 9:00 P.M.
+Se define que cada persona va a investigar de forma independiente cómo funciona la modulación SSB. Se acuerda reunirnos el jueves 28 de mayo a las 9:00 P.M. Carlos es seleccionado como coordinador del equipo.
 
 ---- Todos los integrantes están presentes ------
 
