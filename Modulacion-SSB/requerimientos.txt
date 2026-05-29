@@ -1,0 +1,8 @@
+# En caso de que no se tengan las librerías instaladas se pueden instalar con el comando
+#   python -m venv venv
+#   source venv/bin/activate
+#   pip install -r requirements.txt
+
+numpy
+scipy
+matplotlib
