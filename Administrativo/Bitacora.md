@@ -21,8 +21,10 @@ Se logran obtener las gráficas, queda pendiente analizar los resultados obtenid
 En esta sesión se decide dividir el equipo de trabajo en: 
 - Modulador: Carlos - Gustavo 
 - Demodulador: Adrian - Geovanny
+
 Además de ellos se realiza una demostración inicial al profesor en clase.
 
 ## Sesión 4: 4 de junio
 En esta reunión virtual consistió en mostrar los avances de los miembros previo a la clase del 5 de junio.
+
 ---- Todos los integrantes están presentes ------
