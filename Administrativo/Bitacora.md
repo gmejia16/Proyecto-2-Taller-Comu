@@ -28,3 +28,9 @@ Además de ellos se realiza una demostración inicial al profesor en clase.
 En esta reunión virtual consistió en mostrar los avances de los miembros previo a la clase del 5 de junio.
 
 ---- Todos los integrantes están presentes ------
+
+## Sesión 5: 11 de junio
+En esta sección se estuvo trabajando en corregir la sección de modulación digital. Se agragaron opciones para poder guardar el archivo modulado y de poder cargar un archivo modulado para demodularlo. Esta implementación resultó exitosa y se logra la demodulación. A pesar de esto las pruebas de transmisión por medio del micrófono aún no resultan resultados satisfactorios (Pendiente revisión y depuración). 
+
+---- Todos los integrantes están presentes ------
+
