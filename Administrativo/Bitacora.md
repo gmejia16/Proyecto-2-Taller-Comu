@@ -34,3 +34,7 @@ En esta sección se estuvo trabajando en corregir la sección de modulación dig
 
 ---- Todos los integrantes están presentes ------
 
+## Sesión 6: 12 de junio
+Esta sesión durante la clase se realizaron demostraciones al profesor en el laboratorio se mostró el funcionamiento correcto de la modulación digital y la demodulación a partir de un archivo. Se propone implementar agregarle "ruido al canal" por medio de un AWGN implementado de Python (implementación pendiente). Se realizan más pruebas con el modulador y demodulador por medio del micrófono sin embargo aún se tienen errores en la trama. Pendiente realizar más pruebas. 
+
+---- Todos los integrantes están presentes ------
