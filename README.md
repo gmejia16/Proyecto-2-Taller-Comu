@@ -1,203 +1,78 @@
-# Proyecto 2: Uso de herramientas de programación para simulación de modulaciones de Banda Lateral Única con el enfoque de la Transformada de Hilberth e implementación de modulaciones digitales pasobanda
+# EL5522 - Taller de Comunicaciones Eléctricas
+## Simulador de Modulación SSB y Módem Digital Pasobanda
 
-## Objetivos
+Este repositorio contiene la implementación de una aplicación con interfaz gráfica (GUI) diseñada para simular, analizar y ejecutar transmisiones reales de modulaciones analógicas de Banda Lateral Única (SSB) y modulaciones digitales pasobanda (BFSK). 
 
-- Diseñar e implementar un simulador de modulación/demodulación de banda lateral única y banda lateral independiente con el enfoque de la transformada de Hilberth por medio de herramientas de programación estructurado.
-- Estudiar la transformada de Hilberth para la generación de modulaciones espectralmente eficientes.
-- Evaluar el efecto de demodulación de señales SSB síncronas con error de fase y frecuencia.
-- Utilizar herramientas de programación estructurada y métodos numéricos para el análisis de sistemas de comunicaciones.
-- Envío y recepción de datos digitales utilizando modulaciones pasobanda.
+El sistema permite el envío físico de datos digitales y señales de audio a través del hardware de la computadora (micrófono y parlante), aplicando conceptos de procesamiento digital de señales (DSP) y la Transformada de Hilbert.
 
 ---
 
-# Labor por realizar
+## Características Principales
 
-Crear una aplicación en Python o Java (o el lenguaje de su elección) que reciba un archivo de audio en formato WAV y realice una modulación y demodulación en banda lateral única a una frecuencia específica.
+### Modulador y Demodulador Analógico (SSB / ISB)
+- **Método de Hilbert:** Generación espectralmente eficiente de señales de banda única.
+- **Modos Soportados:** SSB-SC (Portadora Suprimida), SSB-FC (Portadora Completa) e ISB (Banda Lateral Independiente con doble archivo de audio).
+- **Selección de Banda:** Transmisión configurable en banda lateral superior (USB) o inferior (LSB).
+- **Simulación de Canal Receptivo:** Inyección de error de fase (hasta 180°) y error de frecuencia (±25%) para evaluar el desempeño de la demodulación síncrona.
+- **Portadora de Alta Frecuencia:** Soporte para portadoras de hasta 25 kHz con técnicas de sobremuestreo (resampling) para evitar aliasing.
 
-En la misma aplicación, crear una interfaz que permita el envío de un archivo digital utilizando una modulación pasobanda.
-
-El envío de datos se hará por medio del parlante de la PC (TX) y la recepción será por medio del micrófono de la PC (RX), por lo que las frecuencias a trabajar deben ser compatibles con estos dispositivos. También deberá diseñar un protocolo adecuado para el envío y recepción de los datos.
-
----
-
-# Datos de entrada
-
-## Modulación SSB
-
-La aplicación deberá solicitar al usuario:
-
-- Archivo de audio en formato WAV.
-- Frecuencia de portadora.
-- Tipo de modulación SSB:
-  - SSB-FC
-  - SSB-SC
-  - ISB
-- Error de fase.
-- Error de frecuencia.
-- Especificación de cuál banda lateral se desea enviar:
-  - USB
-  - LSB
-
-### Caso especial ISB
-
-Para el caso de ISB, se deben solicitar dos archivos WAV al usuario.
+### Módem Digital Pasobanda (Audio FSK)
+- **Transmisión Acústica:** Envío y recepción de archivos de datos a través del parlante (TX) y micrófono (RX).
+- **Esquema de Modulación:** BFSK (Binary Frequency Shift Keying) optimizado para la banda de audio.
+- **Protocolo de Trama Personalizado:** Implementación de preámbulo, palabra de sincronización, longitud de carga útil y validación criptográfica (SHA-256).
+- **Corrección de Errores (FEC):** Codificación de canal tipo Hamming (7,4) seleccionable por el usuario.
+- **Evaluación de Desempeño:** Cálculo de Tasa de Error de Bit (BER) empírica versus teórica y generación de diagrama de ojo.
 
 ---
 
-## Modulación digital pasobanda
+## Arquitectura del Sistema implementada
 
-La aplicación deberá solicitar:
+La lógica fundamental del procesamiento de señales se divide en dos módulos principales:
 
-- Cualquier archivo digital.
-- Si se utilizará o no algoritmo de corrección de errores.
-- Tipo de modulación digital.
-- Algoritmo de corrección de errores.
+### 1. Flujo Analógico (SSB por Transformada de Hilbert)
+```mermaid
+graph TD
+    A[Audio WAV Original] --> B[Normalización de Amplitud]
+    B --> C{¿Modo de Operación?}
+    
+    C -- SSB-SC / FC --> D[Cálculo de Transformada de Hilbert]
+    D --> E[Señal en Fase]
+    D --> F[Señal en Cuadratura]
+    
+    E --> G[Multiplicar por Portadora Cos]
+    F --> H[Multiplicar por Portadora Sin]
+    
+    G --> I[Señal DSB]
+    H --> J[Cancelación de Fase]
+    
+    I --> K{Banda Lateral}
+    J --> K
+    
+    K -- USB --> L[Resta: DSB - Cuadratura]
+    K -- LSB --> M[Suma: DSB + Cuadratura]
+    
+    C -- ISB --> N[Procesar Audio 1 como USB]
+    C -- ISB --> O[Procesar Audio 2 como LSB]
+    N --> P[Suma de Bandas Independientes]
+    O --> P
 
-> El tipo de modulación y algoritmo de corrección de errores queda a criterio del estudiante.
 
----
-
-# Datos de salida
-
-## Modulación SSB
-
-### Modulador
-
-Debe mostrar:
-
-- Gráficas en el dominio del tiempo y frecuencia del mensaje (señal de audio).
-- Gráficas de la señal DSB.
-- Gráficas de señales SSB e ISB.
-
-### Demodulador
-
-Debe mostrar:
-
-- Gráficas en el dominio del tiempo y frecuencia del mensaje recuperado.
-- Reproducción del mensaje de audio recuperado.
-
----
-
-## Modulación digital pasobanda
-
-### Modulador
-
-Debe mostrar:
-
-- Gráficas en el dominio del tiempo y frecuencia.
-- Constelación.
-
-### Demodulador
-
-Debe mostrar:
-
-- Gráficas en el dominio del tiempo y frecuencia del mensaje recuperado.
-- Gráfica del BER.
-- Diagrama de ojo.
-- Tasa de transferencia.
-
----
-
-# Especificaciones del sistema
-
-## Modulación SSB
-
-1. Formato del archivo de audio de entrada: `WAV`
-2. Formato del archivo de audio de salida: `WAV`
-3. Frecuencia de portadora máxima: `25 kHz`
-4. Error de fase: hasta `180°`
-5. Error de frecuencia: `±25%`
-
-## Modulación digital
-
-Las especificaciones quedan a criterio del estudiante, de tal forma que se cumpla el objetivo buscado: el envío y recepción correctos de un archivo digital.
-
----
-
-# Entregables
-
-## Avance 1 — Semana 13 — 5%
-
-### Debe incluir
-
-- Carga del archivo `.WAV`
-- Implementación inicial del modulador
-- Revisión en clase
-
----
-
-## Avance 2 — Semana 14 — 5%
-
-### Debe incluir
-
-- Interfaz según las especificaciones
-- Modulador completo
-- Implementación inicial del demodulador
-- Revisión en clase
-
----
-
-## Informe Final — Semana 16 — 10%
-
-### Debe incluir
-
-- Informe escrito en formato IEEE detallando:
-  - Diseño del sistema
-  - Resultados obtenidos
-  - Análisis de resultados
-- Toda decisión debe estar completamente justificada.
-- Se evaluarán habilidades de comunicación escrita.
-
-### Secciones requeridas
-
-- Introducción
-- Objetivos
-- Marco teórico
-- Diseño
-- Resultados
-- Análisis de resultados
-- Conclusiones
-- Recomendaciones de mejora
-- Referencias
-- Bitácoras
-
-### Formato de entrega
-
-- PDF
-
-### Importante
-
-- Debe especificarse claramente las limitaciones del sistema propuesto.
-
----
-
-## Presentación — Semana 16 — 5%
-
-### Requisitos
-
-- Defensa de la propuesta ante el grupo.
-- Tiempo de exposición:
-  - 15 minutos
-  - Más tiempo de preguntas
-
-### Entregable
-
-- PDF de la presentación.
-
----
-
-# Administración del proyecto
-
-Se debe generar evidencia sobre el proceso de administración del proyecto:
-
-- Bitácoras de reuniones
-- Cronogramas de planeamiento y seguimiento
-- Desglose de tareas
-- Asignación de responsables
-- Designación de un coordinador del grupo
-
----
-
-# Recomendación
-
-Se recomienda utilizar diagramas de Gantt para la administración y seguimiento del proyecto.
+graph TD
+    A[Archivo de Datos / Bytes] --> B{¿Aplicar FEC?}
+    
+    B -- Sí --> C[Codificador Hamming 7,4]
+    B -- No --> D[Conversión Directa a Bits]
+    
+    C --> E[Empaquetado de Trama]
+    D --> E
+    
+    E --> F[Generar Preamble y Sync Word]
+    F --> G[Cálculo SHA256 Checksum]
+    
+    G --> H[Modulador BFSK]
+    H --> I[Asignación de Tonos]
+    I --> J[Mark: 1200 Hz]
+    I --> K[Space: 2200 Hz]
+    
+    J --> L[Transmisión Acústica por Parlante]
+    K --> L
