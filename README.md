@@ -57,6 +57,7 @@ graph TD
     O --> P
 ```
 
+### 1. Flujo Digital (Módem Pasobanda BFSK)
 ```mermaid
 graph TD
     A[Archivo de Datos / Bytes] --> B{¿Aplicar FEC?}
