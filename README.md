@@ -55,8 +55,9 @@ graph TD
     C -- ISB --> O[Procesar Audio 2 como LSB]
     N --> P[Suma de Bandas Independientes]
     O --> P
+```
 
-
+```mermaid
 graph TD
     A[Archivo de Datos / Bytes] --> B{¿Aplicar FEC?}
     
