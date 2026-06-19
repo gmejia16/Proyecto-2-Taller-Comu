@@ -38,3 +38,17 @@ En esta sección se estuvo trabajando en corregir la sección de modulación dig
 Esta sesión durante la clase se realizaron demostraciones al profesor en el laboratorio se mostró el funcionamiento correcto de la modulación digital y la demodulación a partir de un archivo. Se propone implementar agregarle "ruido al canal" por medio de un AWGN implementado de Python (implementación pendiente). Se realizan más pruebas con el modulador y demodulador por medio del micrófono sin embargo aún se tienen errores en la trama. Pendiente realizar más pruebas. 
 
 ---- Todos los integrantes están presentes ------
+
+## Sesión 6: 14 de junio
+Sesión virtual por Google Meets para organizar el proceso de documentación, creación del informe y de la presentación. Se divide en secciones para una mayor velocidad de trabajo:
+- Carlos y Gustavo: Modulación analógica
+- Adrián y Geovanny: Modulación digital
+Se establece como fecha límite para tener los documentos listos para el jueves 18 en horas de la noche.
+
+---- Todos los integrantes están presentes ------
+
+
+## Sesión 6: 18 de junio
+Sesión virtual por Google Meets. En esta reunión se terminan de afinar detalles relativos a la presentación. Se realiza una revisión final del informe y se termina de comentar el código en el repositorio. 
+
+---- Todos los integrantes están presentes ------
