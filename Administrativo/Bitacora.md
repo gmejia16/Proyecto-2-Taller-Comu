@@ -39,7 +39,7 @@ Esta sesión durante la clase se realizaron demostraciones al profesor en el lab
 
 ---- Todos los integrantes están presentes ------
 
-## Sesión 6: 14 de junio
+## Sesión 7: 14 de junio
 Sesión virtual por Google Meets para organizar el proceso de documentación, creación del informe y de la presentación. Se divide en secciones para una mayor velocidad de trabajo:
 - Carlos y Gustavo: Modulación analógica
 - Adrián y Geovanny: Modulación digital
@@ -49,7 +49,7 @@ Se establece como fecha límite para tener los documentos listos para el jueves 
 ---- Todos los integrantes están presentes ------
 
 
-## Sesión 6: 18 de junio
+## Sesión 8: 18 de junio
 Sesión virtual por Google Meets. En esta reunión se terminan de afinar detalles relativos a la presentación. Se realiza una revisión final del informe y se termina de comentar el código en el repositorio. 
 
 ---- Todos los integrantes están presentes ------
