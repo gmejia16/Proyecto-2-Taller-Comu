@@ -43,6 +43,7 @@ Esta sesión durante la clase se realizaron demostraciones al profesor en el lab
 Sesión virtual por Google Meets para organizar el proceso de documentación, creación del informe y de la presentación. Se divide en secciones para una mayor velocidad de trabajo:
 - Carlos y Gustavo: Modulación analógica
 - Adrián y Geovanny: Modulación digital
+
 Se establece como fecha límite para tener los documentos listos para el jueves 18 en horas de la noche.
 
 ---- Todos los integrantes están presentes ------
