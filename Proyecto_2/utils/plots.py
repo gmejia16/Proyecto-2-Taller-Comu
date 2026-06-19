@@ -1,7 +1,11 @@
 """
-plots.py
-Funciones de graficación para SSB y modulación digital.
-EL5522 - Taller de Comunicaciones Eléctricas
+Módulo de Visualización y Análisis Espectral.
+
+Provee herramientas gráficas basadas en Matplotlib para el análisis temporal 
+y frecuencial de señales analógicas (SSB/ISB) y digitales (BFSK). 
+Incluye generación de diagramas de ojo, curvas BER y constelaciones.
+
+Curso: EL5522 - Taller de Comunicaciones Eléctricas
 """
 
 import numpy as np
@@ -10,35 +14,75 @@ import matplotlib.gridspec as gridspec
 from matplotlib.figure import Figure
 from scipy.signal import welch
 
-
-# ─────────────────────────────────────────────
-# Utilidades FFT
-# ─────────────────────────────────────────────
+# =============================================================================
+# Herramientas de Análisis Espectral (FFT)
+# =============================================================================
 
 def compute_spectrum(signal: np.ndarray, fs: int,
                      n_fft: int = None) -> tuple[np.ndarray, np.ndarray]:
-    """Retorna frecuencias y magnitud espectral (dB) bilateral."""
+    """
+    Calcula el espectro de magnitud bilateral de una señal en escala logarítmica (dB).
+
+    Aplica un enventanado de Hanning previo a la Transformada Rápida de Fourier (FFT)
+    para mitigar el fenómeno de fuga espectral (spectral leakage) causado por las 
+    discontinuidades en los bordes de la señal truncada.
+
+    Parameters
+    ----------
+    signal : np.ndarray
+        Vector con las muestras de la señal en el dominio del tiempo.
+    fs : int
+        Frecuencia de muestreo del sistema en Hz.
+    n_fft : int, opcional
+        Número de puntos para la FFT. Si es None, toma la longitud de la señal.
+
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray]
+        - freqs: Vector de frecuencias centrado en cero [-fs/2, fs/2).
+        - mag_db: Magnitud espectral normalizada en decibelios (dB).
+    """
     n = len(signal)
     if n_fft is None:
         n_fft = n
+        
+    # Enventanado Hanning para suavizar los extremos de la ventana temporal
     window = np.hanning(n)
+    
+    # Cálculo de la FFT y centrado del espectro (fftshift mueve f=0 al centro)
     X = np.fft.fftshift(np.fft.fft(signal * window, n=n_fft))
     freqs = np.fft.fftshift(np.fft.fftfreq(n_fft, d=1/fs))
+    
+    # Cálculo de magnitud en dB: 20*log10(|X|/N). 
+    # El +1e-12 evita singularidades matemáticas (logaritmo de cero).
     mag_db = 20 * np.log10(np.abs(X) / n + 1e-12)
+    
     return freqs, mag_db
 
-
-# ─────────────────────────────────────────────
-# Gráficas SSB
-# ─────────────────────────────────────────────
+# =============================================================================
+# Gráficas Analógicas: Modulación de Banda Lateral Única (SSB)
+# =============================================================================
 
 def plot_ssb_modulator(result: dict) -> Figure:
     """
-    4 subgráficas: tiempo y frecuencia del mensaje,
-    espectro DSB, espectro SSB/ISB.
+    Genera un panel (dashboard) de 4 subgráficas detallando el proceso de modulación.
+    Muestra el mensaje original, los espectros comparativos (DSB vs SSB) y la 
+    señal final en el dominio del tiempo.
+
+    Parameters
+    ----------
+    result : dict
+        Diccionario generado por 'modulate_ssb' o 'modulate_isb' con las señales.
+
+    Returns
+    -------
+    Figure
+        Objeto Figure de Matplotlib configurado y listo para embeber en Tkinter.
     """
     fig = plt.figure(figsize=(14, 10))
     fig.patch.set_facecolor('#0d1117')
+    
+    # GridSpec permite un control fino del layout (por ej., la gráfica inferior ocupa dos columnas)
     gs = gridspec.GridSpec(3, 2, figure=fig, hspace=0.5, wspace=0.35)
 
     colors = {
@@ -57,11 +101,12 @@ def plot_ssb_modulator(result: dict) -> Figure:
     mode    = result["mode"]
     sb      = result.get("sideband", "")
 
-    # Limitar a 50 ms para visualización
+    # Truncamiento temporal: se visualizan solo los primeros 50 ms para apreciar la forma de onda
     t_max   = min(0.05, t[-1])
     mask    = t <= t_max
 
     def ax_style(ax, title):
+        """Aplica un estilo oscuro y profesional a cada subplot de forma estandarizada."""
         ax.set_facecolor('#161b22')
         ax.set_title(title, color='white', fontsize=9, pad=6)
         ax.tick_params(colors='#8b949e')
@@ -72,14 +117,14 @@ def plot_ssb_modulator(result: dict) -> Figure:
         ax.xaxis.label.set_color('#8b949e')
         ax.yaxis.label.set_color('#8b949e')
 
-    # ── Tiempo: Mensaje ──────────────────────────────
+    # ── Dominio del Tiempo: Mensaje Original ──
     ax0 = fig.add_subplot(gs[0, 0])
     ax0.plot(t[mask]*1e3, message[mask], color=colors['message'], lw=0.9)
     ax0.set_xlabel("Tiempo [ms]")
     ax0.set_ylabel("Amplitud")
     ax_style(ax0, "Mensaje m(t)")
 
-    # ── Espectro: Mensaje ────────────────────────────
+    # ── Dominio de la Frecuencia: Espectro del Mensaje ──
     ax1 = fig.add_subplot(gs[0, 1])
     f_msg, M = compute_spectrum(message, fs)
     mask_f = np.abs(f_msg) <= fc * 1.5
@@ -88,7 +133,7 @@ def plot_ssb_modulator(result: dict) -> Figure:
     ax1.set_ylabel("Magnitud [dB]")
     ax_style(ax1, "Espectro del Mensaje M(f)")
 
-    # ── Espectro: DSB ────────────────────────────────
+    # ── Dominio de la Frecuencia: Espectro DSB-SC ──
     ax2 = fig.add_subplot(gs[1, 0])
     f_dsb, D = compute_spectrum(dsb, fs)
     mask_d = (np.abs(f_dsb) >= fc * 0.3) & (np.abs(f_dsb) <= fc * 1.8)
@@ -99,7 +144,7 @@ def plot_ssb_modulator(result: dict) -> Figure:
     ax2.set_ylabel("Magnitud [dB]")
     ax_style(ax2, f"Espectro DSB ({mode})")
 
-    # ── Espectro: SSB ────────────────────────────────
+    # ── Dominio de la Frecuencia: Espectro SSB/ISB ──
     ax3 = fig.add_subplot(gs[1, 1])
     f_ssb, S = compute_spectrum(ssb, fs)
     ax3.plot(f_ssb[mask_d]/1e3, S[mask_d], color=colors['ssb'], lw=0.9)
@@ -110,29 +155,42 @@ def plot_ssb_modulator(result: dict) -> Figure:
     label = f"ISB" if mode == "ISB" else f"SSB ({sb}, {mode})"
     ax_style(ax3, f"Espectro {label} — fc={fc/1e3:.1f} kHz")
 
-    # ── Tiempo: SSB ──────────────────────────────────
+    # ── Dominio del Tiempo: Comparativa SSB vs DSB ──
     ax4 = fig.add_subplot(gs[2, :])
-    ax4.plot(t[mask]*1e3, ssb[mask], color=colors['ssb'], lw=0.8,
-             label=f"SSB ({sb})")
-    ax4.plot(t[mask]*1e3, dsb[mask], color=colors['dsb'], lw=0.6,
-             alpha=0.5, label="DSB")
+    ax4.plot(t[mask]*1e3, ssb[mask], color=colors['ssb'], lw=0.8, label=f"SSB ({sb})")
+    ax4.plot(t[mask]*1e3, dsb[mask], color=colors['dsb'], lw=0.6, alpha=0.5, label="DSB")
     ax4.set_xlabel("Tiempo [ms]")
     ax4.set_ylabel("Amplitud")
     ax4.legend(facecolor='#161b22', labelcolor='white', fontsize=8)
-    ax_style(ax4, "Señales SSB y DSB en el tiempo")
+    ax_style(ax4, "Señales Moduladas en el tiempo (SSB vs DSB)")
 
-    fig.suptitle(f"Modulación SSB — Método Hilbert | fc = {fc/1e3:.2f} kHz | {mode} {sb}",
+    fig.suptitle(f"Modulación SSB — Método de Hilbert | fc = {fc/1e3:.2f} kHz | {mode} {sb}",
                  color='white', fontsize=12, y=0.98)
     return fig
 
-
 def plot_ssb_demodulator(mod_result: dict, demod_result: dict) -> Figure:
-    """Gráficas del demodulador SSB: tiempo y frecuencia del mensaje recuperado."""
+    """
+    Genera gráficas comparativas entre la señal original transmitida y la señal
+    recuperada por el demodulador síncrono, permitiendo analizar cualitativamente
+    el impacto de los errores de fase y frecuencia.
+
+    Parameters
+    ----------
+    mod_result : dict
+        Diccionario del módulo TX (referencia de señal original).
+    demod_result : dict
+        Diccionario del módulo RX (señal afectada por canal/demodulación).
+
+    Returns
+    -------
+    Figure
+        Objeto Figure con 4 subplots (Tiempo y Frecuencia: TX vs RX).
+    """
     fig, axes = plt.subplots(2, 2, figsize=(13, 8))
     fig.patch.set_facecolor('#0d1117')
     fig.suptitle(
-        f"Demodulación SSB | Δφ={demod_result['phase_error_deg']:.1f}° | "
-        f"Δf={demod_result['freq_error_hz']:.1f} Hz",
+        f"Demodulación SSB Síncrona | Error Fase Δφ={demod_result['phase_error_deg']:.1f}° | "
+        f"Error Frec. Δf={demod_result['freq_error_hz']:.1f} Hz",
         color='white', fontsize=11, y=0.98
     )
 
@@ -140,8 +198,9 @@ def plot_ssb_demodulator(mod_result: dict, demod_result: dict) -> Figure:
     recovered = demod_result["recovered"]
     t         = demod_result["t"]
     fs        = demod_result["fs"]
+    
+    # Ajuste de tamaño por posibles recortes durante el filtrado
     n = min(len(original), len(recovered))
-
     t_show = min(0.05, t[-1])
     mask   = t[:n] <= t_show
 
@@ -154,40 +213,58 @@ def plot_ssb_demodulator(mod_result: dict, demod_result: dict) -> Figure:
         ax.xaxis.label.set_color('#8b949e')
         ax.yaxis.label.set_color('#8b949e')
 
+    # Fila Superior: Análisis Temporal
     axes[0,0].plot(t[:n][mask]*1e3, original[:n][mask],  color='#4fc3f7', lw=0.9)
     axes[0,0].set_xlabel("Tiempo [ms]"); axes[0,0].set_ylabel("Amplitud")
-    ax_s(axes[0,0], "Mensaje original")
+    ax_s(axes[0,0], "Mensaje Original (TX)")
 
     axes[0,1].plot(t[:n][mask]*1e3, recovered[:n][mask], color='#a5d6a7', lw=0.9)
     axes[0,1].set_xlabel("Tiempo [ms]"); axes[0,1].set_ylabel("Amplitud")
-    ax_s(axes[0,1], "Mensaje recuperado")
+    ax_s(axes[0,1], "Mensaje Recuperado (RX)")
 
+    # Fila Inferior: Análisis Espectral
     f_orig, Mo = compute_spectrum(original[:n],  fs)
     f_rec,  Mr = compute_spectrum(recovered[:n], fs)
     fc = mod_result["fc"]
-    flim = fc * 0.7
+    flim = fc * 0.7  # Frecuencia máxima de visualización
 
     mask_f = np.abs(f_orig) <= flim
     axes[1,0].plot(f_orig[mask_f]/1e3, Mo[mask_f], color='#4fc3f7', lw=0.9)
     axes[1,0].set_xlabel("Frecuencia [kHz]"); axes[1,0].set_ylabel("Magnitud [dB]")
-    ax_s(axes[1,0], "Espectro original")
+    ax_s(axes[1,0], "Espectro Original (TX)")
 
     mask_r = np.abs(f_rec) <= flim
     axes[1,1].plot(f_rec[mask_r]/1e3, Mr[mask_r], color='#a5d6a7', lw=0.9)
     axes[1,1].set_xlabel("Frecuencia [kHz]"); axes[1,1].set_ylabel("Magnitud [dB]")
-    ax_s(axes[1,1], "Espectro recuperado")
+    ax_s(axes[1,1], "Espectro Recuperado (RX)")
 
     plt.tight_layout()
     return fig
 
-
-# ─────────────────────────────────────────────
-# Gráficas modulación digital
-# ─────────────────────────────────────────────
+# =============================================================================
+# Gráficas Digitales: Módem BFSK
+# =============================================================================
 
 def plot_digital_tx(audio: np.ndarray, fs: int,
                     f_mark: float, f_space: float) -> Figure:
-    """Tiempo y espectro de la señal FSK transmitida. Constelación BFSK."""
+    """
+    Despliega el análisis de la señal digital BFSK transmitida.
+    Incluye oscilograma, espectro con marcadores tonales y diagrama de constelación I/Q.
+
+    Parameters
+    ----------
+    audio : np.ndarray
+        Señal acústica BFSK modulada.
+    fs : int
+        Frecuencia de muestreo.
+    f_mark, f_space : float
+        Frecuencias correspondientes a los estados lógicos 1 y 0.
+
+    Returns
+    -------
+    Figure
+        Objeto Figure configurado.
+    """
     fig = plt.figure(figsize=(14, 8))
     fig.patch.set_facecolor('#0d1117')
     gs = gridspec.GridSpec(2, 3, figure=fig, hspace=0.45, wspace=0.4)
@@ -201,7 +278,7 @@ def plot_digital_tx(audio: np.ndarray, fs: int,
         ax.xaxis.label.set_color('#8b949e')
         ax.yaxis.label.set_color('#8b949e')
 
-    # Tiempo (primeros 50ms)
+    # ── Dominio del Tiempo (Primeros 50ms) ──
     t    = np.arange(len(audio)) / fs
     t_ms = t * 1e3
     n_show = min(int(0.05 * fs), len(audio))
@@ -210,38 +287,59 @@ def plot_digital_tx(audio: np.ndarray, fs: int,
     ax0.set_xlabel("Tiempo [ms]"); ax0.set_ylabel("Amplitud")
     ax_s(ax0, "Señal BFSK transmitida (primeros 50ms)")
 
-    # Espectro
+    # ── Dominio de la Frecuencia (Espectro) ──
     ax1 = fig.add_subplot(gs[1, :2])
     freqs, mag = compute_spectrum(audio[:min(len(audio), 44100)], fs)
     mask = (freqs >= 0) & (freqs <= 5000)
     ax1.plot(freqs[mask], mag[mask], color='#ff8a65', lw=0.9)
+    # Marcadores de frecuencia lógica
     ax1.axvline(f_mark,  color='#a5d6a7', lw=1.5, linestyle='--', label=f'Mark {f_mark} Hz')
     ax1.axvline(f_space, color='#ce93d8', lw=1.5, linestyle='--', label=f'Space {f_space} Hz')
     ax1.legend(facecolor='#161b22', labelcolor='white', fontsize=8)
     ax1.set_xlabel("Frecuencia [Hz]"); ax1.set_ylabel("Magnitud [dB]")
     ax_s(ax1, "Espectro BFSK")
 
-    # Constelación BFSK (I/Q simplificada)
+    # ── Diagrama de Constelación (Plano Complejo I/Q) ──
     ax2 = fig.add_subplot(gs[:, 2])
     theta = np.linspace(0, 2*np.pi, 200)
+    # Círculo unitario de referencia
     ax2.plot(np.cos(theta), np.sin(theta), '--', color='#30363d', lw=0.6)
+    # Ubicación geométrica de los símbolos (Modulación de envolvente constante)
     ax2.scatter([0, 0], [1, -1], s=180, zorder=5,
                 c=['#a5d6a7', '#ce93d8'], edgecolors='white', linewidths=0.8)
     ax2.annotate(f'Mark\n{f_mark} Hz', (0, 1),   color='#a5d6a7', ha='center', va='bottom', fontsize=8)
     ax2.annotate(f'Space\n{f_space} Hz', (0, -1), color='#ce93d8', ha='center', va='top',    fontsize=8)
     ax2.set_xlim(-1.5, 1.5); ax2.set_ylim(-1.5, 1.5)
     ax2.set_aspect('equal')
-    ax2.set_xlabel("I"); ax2.set_ylabel("Q")
+    ax2.set_xlabel("En Fase (I)"); ax2.set_ylabel("Cuadratura (Q)")
     ax_s(ax2, "Constelación BFSK")
 
     fig.suptitle(f"Modulador BFSK | Mark={f_mark}Hz | Space={f_space}Hz | {len(audio)//fs}s de audio",
                  color='white', fontsize=11)
     return fig
 
-
 def plot_ber_and_eye(ber_data: dict, audio: np.ndarray,
                      fs: int, spb: int) -> Figure:
-    """Curva BER vs SNR y diagrama de ojo."""
+    """
+    Genera figuras para el análisis de desempeño del receptor digital.
+    Incluye la curva teórica vs simulada de BER y el diagrama de ojo.
+
+    Parameters
+    ----------
+    ber_data : dict
+        Diccionario con arreglos SNR_dB, BER simulada y BER teórica.
+    audio : np.ndarray
+        Señal de audio demodulada para el trazo del diagrama de ojo.
+    fs : int
+        Frecuencia de muestreo.
+    spb : int
+        Muestras por bit (Samples Per Bit).
+
+    Returns
+    -------
+    Figure
+        Objeto Figure configurado.
+    """
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 6))
     fig.patch.set_facecolor('#0d1117')
 
@@ -254,30 +352,33 @@ def plot_ber_and_eye(ber_data: dict, audio: np.ndarray,
         ax.xaxis.label.set_color('#8b949e')
         ax.yaxis.label.set_color('#8b949e')
 
-    # BER
+    # ── Curva BER vs SNR (Escala Semilogarítmica) ──
     snr = ber_data["snr_db"]
     ax1.semilogy(snr, ber_data["ber_theoretical"], color='#ff8a65',
-                 lw=2, linestyle='--', label='Teórico')
+                 lw=2, linestyle='--', label='Desempeño Teórico')
     ax1.semilogy(snr, ber_data["ber_simulated"],   color='#4fc3f7',
-                 lw=2, label='Simulado')
-    ax1.set_xlabel("Eb/N0 [dB]"); ax1.set_ylabel("BER")
+                 lw=2, label='Simulación Monte Carlo')
+    ax1.set_xlabel("$E_b/N_0$ (SNR) [dB]")
+    ax1.set_ylabel("Tasa de Error de Bit (BER)")
     ax1.legend(facecolor='#161b22', labelcolor='white')
     ax1.grid(True, which='both', color='#21262d', linestyle='--', lw=0.5)
-    ax_s(ax1, "Curva BER — BFSK no-coherente")
+    ax_s(ax1, "Curva BER — BFSK No-Coherente")
 
-    # Diagrama de ojo (superponer períodos de bit)
+    # ── Diagrama de Ojo ──
+    # Superposición de períodos de bit sincrónicos para visualizar margen de ruido e ISI
     n_bits_eye = min(200, len(audio) // spb)
     eye_data = audio[:n_bits_eye * spb].reshape(n_bits_eye, spb)
     t_eye = np.linspace(0, 2, spb)
     for row in eye_data:
         ax2.plot(t_eye, row, color='#a5d6a7', lw=0.4, alpha=0.4)
-    ax2.set_xlabel("Tiempo normalizado [T_b]")
+        
+    ax2.set_xlabel("Tiempo Normalizado [$T_b$]")
     ax2.set_ylabel("Amplitud")
-    ax2.axvline(1.0, color='#ff8a65', lw=1, linestyle='--', alpha=0.7, label='Centro de ojo')
+    ax2.axvline(1.0, color='#ff8a65', lw=1, linestyle='--', alpha=0.7, label='Instante Óptimo de Muestreo')
     ax2.legend(facecolor='#161b22', labelcolor='white', fontsize=8)
-    ax_s(ax2, "Diagrama de Ojo — BFSK")
+    ax_s(ax2, "Diagrama de Ojo — Transiciones BFSK")
 
-    fig.suptitle("Análisis de rendimiento — Modulación Digital BFSK",
+    fig.suptitle("Análisis de Rendimiento y Sincronización — Modulación Digital BFSK",
                  color='white', fontsize=12)
     plt.tight_layout()
     return fig
